@@ -1,0 +1,18 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/png" href="/FR2%20App%20Launcher%20logo.png" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>FR2 AppLauncher</title>
+    <meta name="application-name" content="FR2 AppLauncher" />
+    <meta name="description" content="Enterprise Application Access Platform" />
+  </head>
+  <body>
+    <!-- Die Runtime Config MUSS vor der React App (main.tsx) geladen werden,
+         sonst stürzt api.ts beim Booten ab, weil window.RUNTIME_CONFIG fehlt! -->
+    <script src="/runtime-config.js"></script>
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>

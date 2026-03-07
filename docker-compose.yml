@@ -1,0 +1,59 @@
+services:
+  backend:
+    container_name: fr2-applauncher-backend
+    hostname: backend
+    build:
+      context: .
+      dockerfile: Dockerfile.backend
+    volumes:
+      - ./data:/app/data:z
+      - ./uploads:/app/uploads:z
+    environment:
+      - NODE_ENV=production
+      - PORT=3000
+      - DATABASE_PATH=${DATABASE_PATH:-/app/data/applauncher.db}
+      - JWT_SECRET=${JWT_SECRET:?Set JWT_SECRET in Portainer or .env}
+      - ADMIN_PASSWORD=${ADMIN_PASSWORD:?Set ADMIN_PASSWORD in Portainer or .env}
+      - FRONTEND_URL=${FRONTEND_URL:-}
+      - COOKIE_SECURE=${COOKIE_SECURE:-false}
+      - ALLOW_INSECURE_DEFAULTS=false
+    healthcheck:
+      test:
+        ["CMD-SHELL", "wget -qO- http://localhost:3000/api/health || exit 1"]
+      interval: 15s
+      timeout: 10s
+      retries: 10
+      start_period: 30s
+    networks:
+      - fr2-applauncher
+    restart: unless-stopped
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+    expose:
+      - "3000"
+
+  frontend:
+    container_name: fr2-applauncher-frontend
+    hostname: frontend
+    build:
+      context: .
+      dockerfile: Dockerfile.frontend
+    depends_on:
+      backend:
+        condition: service_healthy
+    networks:
+      - fr2-applauncher
+    restart: unless-stopped
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+    ports:
+      - "${FRONTEND_PORT:-9020}:80"
+
+networks:
+  fr2-applauncher:
