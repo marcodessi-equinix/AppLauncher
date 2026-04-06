@@ -3,9 +3,31 @@ import path from "path"
 import react from "@vitejs/plugin-react"
 import { defineConfig } from "vite"
 
-const rootPackageJsonPath = path.resolve(__dirname, '../package.json')
-const rootPackageJson = JSON.parse(fs.readFileSync(rootPackageJsonPath, 'utf8')) as { version?: string }
-const resolvedAppVersion = process.env.VITE_APP_VERSION || `v${rootPackageJson.version || '0.1.0'}`
+const resolvePackageVersion = (): string => {
+  const candidatePaths = [
+    path.resolve(__dirname, '../package.json'),
+    path.resolve(__dirname, './package.json'),
+  ]
+
+  for (const packageJsonPath of candidatePaths) {
+    if (!fs.existsSync(packageJsonPath)) {
+      continue
+    }
+
+    try {
+      const packageJson = JSON.parse(fs.readFileSync(packageJsonPath, 'utf8')) as { version?: string }
+      if (packageJson.version) {
+        return packageJson.version
+      }
+    } catch {
+      continue
+    }
+  }
+
+  return '0.1.0'
+}
+
+const resolvedAppVersion = process.env.VITE_APP_VERSION || `v${resolvePackageVersion()}`
 const resolvedBuildDate = new Date().toISOString().slice(0, 10)
 
 export default defineConfig({
