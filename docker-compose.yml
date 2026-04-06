@@ -19,7 +19,7 @@ services:
       - ALLOW_INSECURE_DEFAULTS=false
     healthcheck:
       test:
-        ["CMD", "node", "-e", "require('node:http').get('http://127.0.0.1:3000/api/health', (res) => process.exit(res.statusCode === 200 ? 0 : 1)).on('error', () => process.exit(1))"]
+        ["CMD", "node", "-e", "fetch('http://127.0.0.1:3000/api/health').then((res) => process.exit(res.status === 200 ? 0 : 1)).catch(() => process.exit(1))"]
       interval: 15s
       timeout: 10s
       retries: 10
