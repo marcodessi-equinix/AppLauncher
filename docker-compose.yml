@@ -24,10 +24,7 @@ services:
       retries: 8
       start_period: 30s
     networks:
-      fr2-applauncher:
-        aliases:
-          - backend
-          - fr2-applauncher-backend
+      - fr2-applauncher
     restart: unless-stopped
     logging:
       driver: "json-file"
@@ -43,18 +40,9 @@ services:
     build:
       context: .
       dockerfile: Dockerfile.frontend
-    depends_on:
-      backend:
-        condition: service_started
     networks:
-      fr2-applauncher:
-        aliases:
-          - frontend
-          - fr2-applauncher-frontend
-      proxy:
-        aliases:
-          - frontend
-          - fr2-applauncher-frontend
+      - fr2-applauncher
+      - proxy
     restart: unless-stopped
     logging:
       driver: "json-file"
