@@ -138,6 +138,8 @@ Ohne diese beiden Werte startet der Stack nicht.
 | `FRONTEND_URL` | zusätzliche erlaubte Origins, kommagetrennt | leer |
 | `COOKIE_SECURE` | nur bei HTTPS auf `true` setzen | `false` |
 
+Bei Portainer-Deployments aus einem Git-Repository ist das `.git`-Verzeichnis im Build-Kontext oft nicht vorhanden. In diesem Fall baut das Frontend trotzdem erfolgreich, und der sichtbare Build-Stand fällt ohne `VITE_BUILD_NUMBER` auf den Standardwert `001` zurück.
+
 ### Hinweise zum Proxy-Betrieb
 
 - `FRONTEND_URL` ist für den Standardbetrieb über denselben Host meist nicht nötig.
