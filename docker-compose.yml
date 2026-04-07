@@ -1,7 +1,5 @@
 services:
   backend:
-    container_name: fr2-applauncher-backend
-    hostname: backend
     build:
       context: .
       dockerfile: Dockerfile.backend
@@ -35,11 +33,12 @@ services:
       - "3000"
 
   frontend:
-    container_name: fr2-applauncher-frontend
-    hostname: frontend
     build:
       context: .
       dockerfile: Dockerfile.frontend
+    depends_on:
+      backend:
+        condition: service_healthy
     networks:
       - fr2-applauncher
       - proxy
