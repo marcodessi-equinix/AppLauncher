@@ -92,19 +92,7 @@ export function createApp(): express.Express {
   };
 
   app.use(helmet({
-    contentSecurityPolicy: {
-      directives: {
-        defaultSrc: ["'self'"],
-        scriptSrc: ["'self'"],
-        styleSrc: ["'self'", "'unsafe-inline'", "https://fonts.googleapis.com"],
-        styleSrcElem: ["'self'", "'unsafe-inline'", "https://fonts.googleapis.com"],
-        fontSrc: ["'self'", "https://fonts.gstatic.com"],
-        imgSrc: ["'self'", 'data:', 'https:'],
-        connectSrc: ["'self'", "https://api.open-meteo.com", "https://api.iconify.design"],
-        objectSrc: ["'none'"],
-        frameAncestors: ["'none'"],
-      },
-    },
+    contentSecurityPolicy: false,
     crossOriginResourcePolicy: false,
   }));
 
