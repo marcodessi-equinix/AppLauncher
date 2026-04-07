@@ -237,7 +237,7 @@ Wichtig:
 - `JWT_SECRET` darf nicht leer sein und sollte mindestens 32 Zeichen lang sein.
 - `ADMIN_PASSWORD` darf nicht leer sein. Klartext ist erlaubt, ein bcrypt-Hash ebenfalls.
 - `FRONTEND_URL` im Standardfall leer lassen. Nur setzen, wenn du bewusst zusätzliche Origins erlauben willst.
-- `COOKIE_SECURE=false` nur für direkten HTTP-Zugriff. Hinter einem HTTPS-Reverse-Proxy auf `true` setzen.
+- `COOKIE_SECURE=false` ist für direkten HTTP-Zugriff gedacht. Hinter einem HTTPS-Reverse-Proxy kann die App HTTPS normalerweise automatisch erkennen; falls dein Proxy `X-Forwarded-Proto` nicht korrekt weiterreicht, setze `COOKIE_SECURE=true` explizit.
 
 Wenn du `install.sh` verwendest, gilt zusätzlich:
 
