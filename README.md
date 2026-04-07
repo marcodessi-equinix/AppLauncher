@@ -102,6 +102,7 @@ flowchart LR
 - HTTP im internen Netz, kein HTTPS-Zwang im Standardbetrieb
 - Frontend zusätzlich im externen Proxy-Netz `nginx-proxy-manager_default`
 - persistente Volumes für Datenbank und Uploads
+- Frontend startet unabhängig vom Backend, damit Webzugriff nicht vom Healthcheck blockiert wird
 
 ## Portainer Deployment aus GitHub
 
@@ -132,6 +133,7 @@ Ohne diese beiden Werte startet der Stack nicht.
 | --- | --- | --- |
 | `FRONTEND_PORT` | Host-Port für das Frontend | `9020` |
 | `DATABASE_PATH` | SQLite-Datei im Container | `/app/data/applauncher.db` |
+| `PROXY_NETWORK` | Externes Netzwerk für Nginx Proxy Manager | `nginx-proxy-manager_default` |
 | `FRONTEND_URL` | zusätzliche erlaubte Origins, kommagetrennt | leer |
 | `COOKIE_SECURE` | nur bei HTTPS auf `true` setzen | `false` |
 
@@ -139,7 +141,8 @@ Ohne diese beiden Werte startet der Stack nicht.
 
 - `FRONTEND_URL` ist für den Standardbetrieb über denselben Host meist nicht nötig.
 - Die App akzeptiert denselben Origin hinter dem Proxy automatisch.
-- Für Nginx Proxy Manager reicht es, wenn das Frontend im gleichen externen Netzwerk liegt.
+- Für Nginx Proxy Manager gibt es jetzt beide Wege: entweder Proxy-Ziel auf `VM-HOSTNAME:9020` oder gemeinsames Netzwerk über `PROXY_NETWORK`.
+- Der direkte Zugriff über `http://VM-HOSTNAME:9020` muss auch dann funktionieren, wenn das Backend gerade noch startet.
 
 ## Zugriff
 
@@ -221,6 +224,7 @@ Für den Standardbetrieb auf einer VM ohne Sonderfälle brauchst du genau diese 
 PORT=3000
 FRONTEND_PORT=9020
 DATABASE_PATH=/app/data/applauncher.db
+PROXY_NETWORK=nginx-proxy-manager_default
 FRONTEND_URL=
 COOKIE_SECURE=false
 ALLOW_INSECURE_DEFAULTS=false

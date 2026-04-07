@@ -40,11 +40,9 @@ services:
     build:
       context: .
       dockerfile: Dockerfile.frontend
-    depends_on:
-      backend:
-        condition: service_healthy
     networks:
       - fr2-applauncher
+      - proxy
     restart: unless-stopped
     logging:
       driver: "json-file"
@@ -56,6 +54,9 @@ services:
 
 networks:
   fr2-applauncher:
+  proxy:
+    name: ${PROXY_NETWORK:-nginx-proxy-manager_default}
+    external: true
 
 volumes:
   fr2-applauncher-data:
