@@ -42,10 +42,7 @@ services:
       backend:
         condition: service_started
     networks:
-      fr2-applauncher:
-      proxy:
-        aliases:
-          - fr2-applauncher-frontend
+      - fr2-applauncher
     restart: unless-stopped
     logging:
       driver: "json-file"
@@ -57,12 +54,6 @@ services:
 
 networks:
   fr2-applauncher:
-  # Shared network for reverse-proxy access (NPM, Traefik, etc.)
-  # Default: creates a local bridge named 'fr2-applauncher-proxy'.
-  # Override: set PROXY_NETWORK to your proxy's network name, e.g.:
-  #   PROXY_NETWORK=nginx-proxy-manager_default
-  proxy:
-    name: ${PROXY_NETWORK:-fr2-applauncher-proxy}
 
 volumes:
   fr2-applauncher-data:
