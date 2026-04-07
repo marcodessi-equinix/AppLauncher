@@ -9,6 +9,17 @@ RED=$(tput setaf 1 2>/dev/null || echo "")
 YELLOW=$(tput setaf 3 2>/dev/null || echo "")
 DEFAULT_PROXY_NETWORK="nginx-proxy-manager_default"
 
+require_env_value() {
+    local key="$1"
+    local value
+    value=$(grep -E "^${key}=" .env 2>/dev/null | head -n1 | cut -d= -f2- || true)
+
+    if [ -z "$value" ]; then
+        echo "${RED}FEHLER: '${key}' fehlt in .env oder ist leer.${RESET}"
+        exit 1
+    fi
+}
+
 generate_secret() {
     if command -v openssl >/dev/null 2>&1; then
         openssl rand -hex 32
@@ -48,6 +59,8 @@ echo ""
 echo "${BOLD}[2/4] .env-Datei einrichten...${RESET}"
 if [ -f ".env" ]; then
     echo "${YELLOW}ℹ  .env existiert bereits und wird weiterverwendet.${RESET}"
+    require_env_value "JWT_SECRET"
+    require_env_value "ADMIN_PASSWORD"
 else
     read -r -p "  Frontend-Port [9020]: " FRONTEND_PORT
     FRONTEND_PORT="${FRONTEND_PORT:-9020}"

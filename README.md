@@ -131,7 +131,6 @@ Ohne diese beiden Werte startet der Stack nicht.
 | Variable | Zweck | Standard |
 | --- | --- | --- |
 | `FRONTEND_PORT` | Host-Port für das Frontend | `9020` |
-| `PROXY_NETWORK` | Externes Netzwerk für Nginx Proxy Manager | `nginx-proxy-manager_default` |
 | `DATABASE_PATH` | SQLite-Datei im Container | `/app/data/applauncher.db` |
 | `FRONTEND_URL` | zusätzliche erlaubte Origins, kommagetrennt | leer |
 | `COOKIE_SECURE` | nur bei HTTPS auf `true` setzen | `false` |
@@ -214,7 +213,9 @@ npm run test
 npm run lint
 ```
 
-## Beispiel `.env`
+## Empfohlene `.env`
+
+Für den Standardbetrieb auf einer VM ohne Sonderfälle brauchst du genau diese Werte:
 
 ```env
 PORT=3000
@@ -223,10 +224,22 @@ DATABASE_PATH=/app/data/applauncher.db
 FRONTEND_URL=
 COOKIE_SECURE=false
 ALLOW_INSECURE_DEFAULTS=false
-PROXY_NETWORK=nginx-proxy-manager_default
-JWT_SECRET=
-ADMIN_PASSWORD=
+JWT_SECRET=9d8f0e6a1c2b3d4e5f60718293a4b5c6d7e8f90123456789abcdef012345678
+ADMIN_PASSWORD=ChangeThisToYourOwnStrongPassword
 ```
+
+Wichtig:
+
+- `JWT_SECRET` darf nicht leer sein und sollte mindestens 32 Zeichen lang sein.
+- `ADMIN_PASSWORD` darf nicht leer sein. Klartext ist erlaubt, ein bcrypt-Hash ebenfalls.
+- `FRONTEND_URL` im Standardfall leer lassen. Nur setzen, wenn du bewusst zusätzliche Origins erlauben willst.
+- `COOKIE_SECURE=false` nur für direkten HTTP-Zugriff. Hinter einem HTTPS-Reverse-Proxy auf `true` setzen.
+
+Wenn du `install.sh` verwendest, gilt zusätzlich:
+
+- Existiert bereits eine `.env`, dann wird sie wiederverwendet.
+- Eine vorhandene `.env` mit leerem `JWT_SECRET` oder leerem `ADMIN_PASSWORD` blockiert die Installation.
+- Wenn du neu starten willst, lösche die bestehende `.env` vor `bash install.sh`.
 
 `ADMIN_PASSWORD` kann als Klartext gesetzt werden. Ein vorhandener bcrypt-Hash wird ebenfalls unterstützt.
 

@@ -62,6 +62,7 @@ export default defineConfig({
   server: {
     host: "0.0.0.0",
     port: 5001,
+    strictPort: true,
     proxy: {
       '/api': {
         target: process.env.API_PROXY_TARGET || 'http://localhost:3000',
@@ -72,6 +73,7 @@ export default defineConfig({
   preview: {
     host: "0.0.0.0",
     port: 5001,
+    strictPort: true,
   },
   build: {
     chunkSizeWarningLimit: 1000,

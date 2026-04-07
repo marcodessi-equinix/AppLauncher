@@ -8,14 +8,35 @@ const isLikelyHtml = (value: unknown): boolean => {
   return sample.startsWith('<!doctype html') || sample.startsWith('<html');
 };
 
+const getErrorDetail = (value: unknown): string | null => {
+  if (typeof value === 'string') {
+    const normalized = value.trim();
+    return normalized && !isLikelyHtml(normalized) ? normalized.slice(0, 200) : null;
+  }
+
+  if (!value || typeof value !== 'object') {
+    return null;
+  }
+
+  const candidate = (value as { error?: unknown; message?: unknown }).error
+    ?? (value as { error?: unknown; message?: unknown }).message;
+
+  return typeof candidate === 'string' && candidate.trim()
+    ? candidate.trim()
+    : null;
+};
+
 const normalizeError = (error: unknown): Error => {
   if (axios.isAxiosError(error)) {
     let errToReturn: Error;
     if (error.response) {
       const status = error.response.status;
       const body = error.response.data;
+      const detail = getErrorDetail(body);
       if (isLikelyHtml(body)) {
         errToReturn = new Error(`API returned HTML instead of JSON (status ${status}).`);
+      } else if (detail) {
+        errToReturn = new Error(`API request failed (status ${status}): ${detail}`);
       } else {
         errToReturn = new Error(`API request failed (status ${status}).`);
       }
