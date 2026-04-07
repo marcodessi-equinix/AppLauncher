@@ -7,6 +7,18 @@ export interface ChangelogEntry {
 
 export const APP_CHANGELOG: ChangelogEntry[] = [
   {
+    version: 'v1.6.0',
+    date: '2026-04-07',
+    title: 'Proxy-, Deployment- und Startverhalten stabilisiert',
+    items: [
+      'Der App-Start wurde fuer direkte Hostnamen-Aufrufe und den Betrieb hinter Nginx Proxy Manager erneut vereinheitlicht.',
+      'Frontend-Builds bleiben jetzt auch dann startfaehig, wenn Browser oder Proxy noch einen aelteren Bundle-Stand zwischengespeichert haben.',
+      'Der API-Upstream zwischen Frontend und Backend wurde fuer den Containerbetrieb bereinigt, damit interne Requests zuverlaessiger aufgeloest werden.',
+      'Die HTTPS-Erkennung fuer Cookies hinter Reverse Proxys wurde korrigiert, damit Logins und Session-Cookies nicht mehr von manuellen Nacharbeiten abhaengen.',
+      'README, .env-Beispiel und Installationspfad wurden an den tatsaechlichen Produktionsbetrieb angepasst.',
+    ],
+  },
+  {
     version: 'v1.5.0',
     date: '2026-04-06',
     title: 'Dashboard, Admin-Workflow und Release Notes erweitert',
