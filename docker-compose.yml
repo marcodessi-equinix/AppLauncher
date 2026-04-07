@@ -1,7 +1,6 @@
 services:
   backend:
     container_name: fr2-applauncher-backend
-    hostname: backend
     build:
       context: .
       dockerfile: Dockerfile.backend
@@ -18,12 +17,11 @@ services:
       - COOKIE_SECURE=${COOKIE_SECURE:-false}
       - ALLOW_INSECURE_DEFAULTS=false
     healthcheck:
-      test:
-        ["CMD", "node", "-e", "fetch('http://127.0.0.1:3000/api/health').then((res) => process.exit(res.status === 200 ? 0 : 1)).catch(() => process.exit(1))"]
-      interval: 15s
-      timeout: 10s
-      retries: 10
-      start_period: 30s
+      test: ["CMD", "wget", "--spider", "-q", "http://127.0.0.1:3000/api/health"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 15s
     networks:
       - fr2-applauncher
     restart: unless-stopped
@@ -37,7 +35,6 @@ services:
 
   frontend:
     container_name: fr2-applauncher-frontend
-    hostname: frontend
     build:
       context: .
       dockerfile: Dockerfile.frontend
@@ -45,11 +42,7 @@ services:
       backend:
         condition: service_started
     networks:
-      fr2-applauncher:
-      proxy-network:
-        aliases:
-          - fr2-applauncher-frontend
-          - frontend
+      - fr2-applauncher
     restart: unless-stopped
     logging:
       driver: "json-file"
@@ -61,9 +54,6 @@ services:
 
 networks:
   fr2-applauncher:
-  proxy-network:
-    name: ${PROXY_NETWORK:-nginx-proxy-manager_default}
-    external: true
 
 volumes:
   fr2-applauncher-data:

@@ -1,14 +1,6 @@
 import axios from 'axios';
 
-const normalizeApiBase = (base: string): string => {
-  const trimmed = base.replace(/\/+$/, '');
-  return trimmed.endsWith('/api') ? trimmed : `${trimmed}/api`;
-};
-
-const runtimeApiUrl = String(window.RUNTIME_CONFIG?.API_URL || '').trim();
-const fallbackApiUrl = `${window.location.origin.replace(/\/$/, '')}/api`;
-
-const API_BASE = normalizeApiBase(runtimeApiUrl || fallbackApiUrl);
+const API_BASE = '/api';
 
 const isLikelyHtml = (value: unknown): boolean => {
   if (typeof value !== 'string') return false;

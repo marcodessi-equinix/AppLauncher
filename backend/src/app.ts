@@ -23,10 +23,6 @@ const JWT_SECRET = process.env.JWT_SECRET || '';
 const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || '';
 const ALLOW_INSECURE_DEFAULTS = process.env.ALLOW_INSECURE_DEFAULTS === 'true';
 const NODE_ENV = process.env.NODE_ENV || 'development';
-const requiredAllowedOrigins = [
-  'https://fr2-applauncher.equinix.com',
-  'http://fr2lxcops02.corp.equinix.com:9020',
-];
 const explicitAllowedOrigins = (process.env.FRONTEND_URL || '')
   .split(',')
   .map((origin) => origin.trim())
@@ -71,7 +67,6 @@ export function createApp(): express.Express {
   const app = express();
   app.set('trust proxy', 1);
   const allowedOrigins = new Set([
-    ...requiredAllowedOrigins,
     ...explicitAllowedOrigins,
     ...(NODE_ENV === 'production' ? [] : devAllowedOrigins),
   ].map(normalizeOrigin));
