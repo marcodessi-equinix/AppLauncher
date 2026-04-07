@@ -13,7 +13,7 @@ export const Dock: React.FC = () => {
   const setActiveCategory = useStore((state) => state.setActiveCategory);
   const favorites = useStore((state) => state.favorites);
   const { releaseVersion, buildVersion, buildDate } = getAppVersionInfo();
-  const visibleVersion = releaseVersion;
+  const visibleVersion = buildVersion;
   const [isVersionDialogOpen, setIsVersionDialogOpen] = React.useState(false);
 
   const handleVersionDialogChange = React.useCallback((open: boolean) => {
@@ -92,7 +92,7 @@ export const Dock: React.FC = () => {
       <VersionChangelogDialog
         isOpen={isVersionDialogOpen}
         onOpenChange={handleVersionDialogChange}
-        currentVersion={releaseVersion}
+        currentVersion={buildVersion}
         buildVersion={buildVersion}
         releaseVersion={releaseVersion}
         buildDate={buildDate}

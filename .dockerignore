@@ -17,7 +17,6 @@ frontend/.env*
 backend/.env*
 
 # Git
-.git/
 .gitignore
 
 # SQLite databases (should be mounted via volume)

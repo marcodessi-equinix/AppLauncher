@@ -1,6 +1,6 @@
 import fs from "fs"
 import path from "path"
-import { execSync } from "child_process"
+import { execFileSync } from "child_process"
 import react from "@vitejs/plugin-react"
 import { defineConfig } from "vite"
 
@@ -41,7 +41,24 @@ const normalizeBuildNumber = (value: string): string => {
   return trimmed
 }
 
-const resolveGitBuildNumber = (): string | null => {
+const createDisplayBuildVersion = (releaseVersion: string, buildNumber: string): string => {
+  const normalizedReleaseVersion = releaseVersion.replace(/^v/i, '')
+  const versionParts = normalizedReleaseVersion.split('.')
+
+  if (versionParts.length >= 3 && versionParts[2] === '0') {
+    return `${versionParts[0]}.${versionParts[1]}.${buildNumber}`
+  }
+
+  return `${normalizedReleaseVersion}.${buildNumber}`
+}
+
+const runGit = (args: string[], cwd: string): string =>
+  execFileSync('git', args, {
+    cwd,
+    stdio: ['ignore', 'pipe', 'ignore'],
+  }).toString().trim()
+
+const resolveGitBuildNumber = (releaseVersion: string): string | null => {
   try {
     const repoRoot = path.resolve(__dirname, '..')
     const gitDir = path.join(repoRoot, '.git')
@@ -49,10 +66,28 @@ const resolveGitBuildNumber = (): string | null => {
       return null
     }
 
-    const count = execSync('git rev-list --count HEAD', {
-      cwd: repoRoot,
-      stdio: ['ignore', 'pipe', 'ignore'],
-    }).toString().trim()
+    const normalizedReleaseVersion = releaseVersion.replace(/^v/i, '')
+    const anchorCandidates = runGit([
+      'log',
+      '--reverse',
+      '--format=%H',
+      '-S',
+      `"version": "${normalizedReleaseVersion}"`,
+      '--',
+      'package.json',
+    ], repoRoot)
+      .split(/\r?\n/)
+      .map((line) => line.trim())
+      .filter(Boolean)
+
+    if (anchorCandidates.length > 0) {
+      const anchorCommit = anchorCandidates[0]
+      const commitsSinceAnchor = runGit(['rev-list', '--count', `${anchorCommit}..HEAD`], repoRoot)
+      const sequence = Number.parseInt(commitsSinceAnchor || '0', 10) + 1
+      return normalizeBuildNumber(String(sequence))
+    }
+
+    const count = runGit(['rev-list', '--count', 'HEAD'], repoRoot)
 
     return count ? normalizeBuildNumber(count) : null
   } catch {
@@ -60,17 +95,18 @@ const resolveGitBuildNumber = (): string | null => {
   }
 }
 
-const resolveBuildNumber = (): string => {
+const resolveBuildNumber = (releaseVersion: string): string => {
   const explicitBuildNumber = process.env.VITE_BUILD_NUMBER || process.env.BUILD_NUMBER
   if (explicitBuildNumber) {
     return normalizeBuildNumber(explicitBuildNumber)
   }
 
-  return resolveGitBuildNumber() || '001'
+  return resolveGitBuildNumber(releaseVersion) || '001'
 }
 
 const resolvedAppVersion = process.env.VITE_APP_VERSION || `v${resolvePackageVersion()}`
-const resolvedBuildVersion = resolveBuildNumber()
+const resolvedBuildNumber = resolveBuildNumber(resolvedAppVersion)
+const resolvedBuildVersion = createDisplayBuildVersion(resolvedAppVersion, resolvedBuildNumber)
 const resolvedBuildDate = new Date().toISOString().slice(0, 10)
 
 export default defineConfig({

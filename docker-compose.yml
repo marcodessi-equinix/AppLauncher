@@ -41,7 +41,7 @@ services:
       context: .
       dockerfile: Dockerfile.frontend
       args:
-        VITE_BUILD_NUMBER: ${VITE_BUILD_NUMBER:-001}
+        VITE_BUILD_NUMBER: ${VITE_BUILD_NUMBER:-}
     networks:
       - fr2-applauncher
       - proxy
