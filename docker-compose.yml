@@ -24,7 +24,9 @@ services:
       retries: 8
       start_period: 30s
     networks:
-      - internal
+      internal:
+        aliases:
+          - applauncher-backend
     restart: unless-stopped
     logging:
       driver: "json-file"

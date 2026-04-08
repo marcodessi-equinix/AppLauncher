@@ -245,6 +245,8 @@ Use the same `docker-compose.yml` for both direct access and reverse-proxy setup
 3. Set `COOKIE_SECURE=true` if the proxy terminates SSL, otherwise leave it at `auto`.
 4. Optionally set `FRONTEND_URL=https://your-domain.example` for stricter origin validation.
 
+> Avoid manually attaching the frontend container to a shared proxy network unless you need container-to-container proxying. The simplest and most reliable setup is to let the proxy forward to `http://<host-ip>:<APP_PORT>`.
+
 A reference host-level nginx config is provided in `nginx/nginx.conf`.
 
 ## Security
