@@ -10,10 +10,13 @@ export const upsertGroupInDashboard = (groups: Group[], nextGroup: Group): Group
     ? { ...existing, ...nextGroup, links: existing.links || [] }
     : { ...nextGroup, links: [] };
 
-  return sortGroups([
+  const sorted = sortGroups([
     ...groups.filter((group) => group.id !== nextGroup.id),
     mergedGroup,
   ]);
+
+  // Normalize order values to be contiguous 0-based
+  return sorted.map((group, index) => ({ ...group, order: index }));
 };
 
 export const removeGroupFromDashboard = (groups: Group[], groupId: number): Group[] =>

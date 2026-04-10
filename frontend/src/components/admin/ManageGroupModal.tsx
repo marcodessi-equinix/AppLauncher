@@ -9,16 +9,16 @@ import { DynamicIcon } from '../ui/DynamicIcon';
 import api, { getErrorMessage } from '../../lib/api';
 import { Group } from '../../types';
 import { useQueryClient } from '@tanstack/react-query';
-import { upsertGroupInDashboard } from '../../lib/dashboardData';
 import { useI18n } from '../../lib/i18n';
 
 interface ManageGroupModalProps {
   isOpen: boolean;
   onClose: () => void;
   group?: Group | null; // If null, we are creating
+  totalGroups?: number; // Total number of groups (for position clamping)
 }
 
-export const ManageGroupModal: React.FC<ManageGroupModalProps> = ({ isOpen, onClose, group }) => {
+export const ManageGroupModal: React.FC<ManageGroupModalProps> = ({ isOpen, onClose, group, totalGroups = 0 }) => {
   const { t } = useI18n();
   const [title, setTitle] = useState('');
   const [order, setOrder] = useState(0);
@@ -31,15 +31,17 @@ export const ManageGroupModal: React.FC<ManageGroupModalProps> = ({ isOpen, onCl
     if (isOpen) {
       if (group) {
         setTitle(group.title);
-        setOrder(group.order);
+        // Display 1-based position to the user
+        setOrder(group.order + 1);
         setIcon(group.icon || '');
       } else {
         setTitle('');
-        setOrder(0);
+        // New group defaults to last position
+        setOrder(totalGroups + 1);
         setIcon('');
       }
     }
-  }, [isOpen, group]);
+  }, [isOpen, group, totalGroups]);
 
   if (!isOpen) return null;
 
@@ -47,16 +49,22 @@ export const ManageGroupModal: React.FC<ManageGroupModalProps> = ({ isOpen, onCl
     e.preventDefault();
     setIsLoading(true);
 
+    // Convert 1-based UI position to 0-based order, clamped to valid range
+    const maxPosition = group ? totalGroups : totalGroups + 1;
+    const clampedPosition = Math.max(1, Math.min(order, maxPosition));
+    const zeroBasedOrder = clampedPosition - 1;
+
     try {
       let savedGroup: Group;
       if (group) {
-        const response = await api.put<Group>(`/groups/${group.id}`, { title, order, icon });
+        const response = await api.put<Group>(`/groups/${group.id}`, { title, order: zeroBasedOrder, icon });
         savedGroup = response.data;
       } else {
-        const response = await api.post<Group>('/groups', { title, order, icon });
+        const response = await api.post<Group>('/groups', { title, order: zeroBasedOrder, icon });
         savedGroup = response.data;
       }
-      queryClient.setQueryData<Group[]>(['dashboardData'], (current = []) => upsertGroupInDashboard(current, savedGroup));
+      // Refetch dashboard data to get the fully normalized order from backend
+      queryClient.invalidateQueries({ queryKey: ['dashboardData'] });
       onClose();
     } catch (error) {
       console.error('Failed to save group', error);
@@ -119,6 +127,21 @@ export const ManageGroupModal: React.FC<ManageGroupModalProps> = ({ isOpen, onCl
                 placeholder={t('groups.groupTitle')}
                 className="bg-background/50 border-input"
               />
+            </div>
+
+            <div className="space-y-2">
+              <label className="modal-field-label text-[9px] font-black text-muted-foreground/40 uppercase tracking-[0.2em] pl-1">{t('groups.position')}</label>
+              <Input
+                type="number"
+                min={1}
+                max={group ? totalGroups : totalGroups + 1}
+                value={order}
+                onChange={(e) => setOrder(Math.max(1, parseInt(e.target.value) || 1))}
+                className="bg-background/50 border-input w-24"
+              />
+              <p className="text-[10px] text-muted-foreground/50 pl-1">
+                {t('groups.positionHint', { max: group ? totalGroups : totalGroups + 1 })}
+              </p>
             </div>
           </CardContent>
 

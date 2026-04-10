@@ -69,6 +69,8 @@ const translations = {
     'groups.closeGroupModal': 'Gruppen-Dialog schließen',
     'groups.closeIconPicker': 'Icon-Auswahl schließen',
     'groups.groupTitle': 'Gruppentitel',
+    'groups.position': 'Position',
+    'groups.positionHint': '1 = oben, {max} = unten',
 
     'links.editLink': 'Link bearbeiten',
     'links.newLink': 'Neuer Link',
@@ -344,6 +346,8 @@ const translations = {
     'groups.closeGroupModal': 'Close group modal',
     'groups.closeIconPicker': 'Close icon picker',
     'groups.groupTitle': 'Group Title',
+    'groups.position': 'Position',
+    'groups.positionHint': '1 = top, {max} = bottom',
 
     'links.editLink': 'Edit Link',
     'links.newLink': 'New Link',

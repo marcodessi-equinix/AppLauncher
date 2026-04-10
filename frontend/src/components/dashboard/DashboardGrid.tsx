@@ -7,6 +7,7 @@ import { LinkCard } from './LinkCard';
 import { useStore } from '../../store/useStore';
 import { Loader2, AlertCircle, Plus, ChevronDown, ChevronUp } from 'lucide-react';
 import { removeGroupFromDashboard, removeLinkFromDashboard } from '../../lib/dashboardData';
+import { toReorderPayload } from '../../lib/ordering';
 import {
   areLinkAnnouncementSnapshotsEqual,
   createLinkAnnouncementSnapshot,
@@ -179,12 +180,13 @@ const FavoritesPanel: React.FC<{
 };
 
 const normalizeGroupLinks = (groups: Group[]): Group[] =>
-  groups.map((group) => ({
+  groups.map((group, groupIndex) => ({
     ...group,
-    links: (group.links || []).map((link, index) => ({
+    order: groupIndex,
+    links: (group.links || []).map((link, linkIndex) => ({
       ...link,
       group_id: group.id,
-      order: index,
+      order: linkIndex,
     })),
   }));
 
@@ -502,8 +504,9 @@ export const DashboardGrid: React.FC<DashboardGridProps> = ({ autoOpenLinkChange
     try {
       if (pendingDelete.type === 'group') {
         await api.delete(`/groups/${pendingDelete.id}`);
-        setLocalGroups((current) => removeGroupFromDashboard(current, pendingDelete.id));
-        queryClient.setQueryData<Group[]>(['dashboardData'], (current = []) => removeGroupFromDashboard(current, pendingDelete.id));
+        const normalize = (current: Group[]) => normalizeGroupLinks(removeGroupFromDashboard(current, pendingDelete.id));
+        setLocalGroups(normalize);
+        queryClient.setQueryData<Group[]>(['dashboardData'], (current = []) => normalize(current));
       } else if (pendingDelete.type === 'link') {
         await api.delete(`/links/${pendingDelete.id}`);
         setLocalGroups((current) => removeLinkFromDashboard(current, pendingDelete.id));
@@ -762,6 +765,9 @@ export const DashboardGrid: React.FC<DashboardGridProps> = ({ autoOpenLinkChange
     const { active, over } = event;
     const activeIdStr = String(active.id);
 
+    // Capture snapshot locally so each drag's rollback is independent of future drags
+    const rollbackSnapshot = dragStartSnapshotRef.current;
+
     // ── Link drag: localGroups already reflects final state from handleDragOver ──
     // Must be handled BEFORE the over.id guard because @dnd-kit/sortable can report
     // over.id === active.id after a live arrayMove, which would skip the API call.
@@ -769,9 +775,8 @@ export const DashboardGrid: React.FC<DashboardGridProps> = ({ autoOpenLinkChange
       const activeLinkId = parseInt(activeIdStr.replace('link-', ''));
 
       // Where did the link start?
-      const snapshot = dragStartSnapshotRef.current;
       let sourceGroupIndex = -1;
-      snapshot.forEach((g, i) => {
+      rollbackSnapshot.forEach((g, i) => {
         if (g.links?.some(l => l.id === activeLinkId)) sourceGroupIndex = i;
       });
       if (sourceGroupIndex === -1) return;
@@ -784,7 +789,7 @@ export const DashboardGrid: React.FC<DashboardGridProps> = ({ autoOpenLinkChange
       if (destGroupIndex === -1) return;
 
       // Skip if nothing actually changed
-      const snapshotLinks = snapshot[sourceGroupIndex]?.links || [];
+      const snapshotLinks = rollbackSnapshot[sourceGroupIndex]?.links || [];
       const currentLinks = localGroups[destGroupIndex]?.links || [];
       if (
         sourceGroupIndex === destGroupIndex &&
@@ -807,12 +812,12 @@ export const DashboardGrid: React.FC<DashboardGridProps> = ({ autoOpenLinkChange
             order: linkOrder,
           });
           const srcLinks = normalizedGroups[sourceGroupIndex].links || [];
-          if (srcLinks.length > 0) await api.put('/reorder/links', srcLinks.map((l, i) => ({ id: l.id, order: i })));
+          if (srcLinks.length > 0) await api.put('/reorder/links', toReorderPayload(srcLinks));
         }
-        await api.put('/reorder/links', destLinks.map((l, i) => ({ id: l.id, order: i })));
+        await api.put('/reorder/links', toReorderPayload(destLinks));
       } catch (err) {
         console.error('Failed to save link reorder:', err);
-        syncDashboardGroups(dragStartSnapshotRef.current);
+        syncDashboardGroups(rollbackSnapshot);
       }
       return;
     }
@@ -829,7 +834,7 @@ export const DashboardGrid: React.FC<DashboardGridProps> = ({ autoOpenLinkChange
         resolvedOverGroupId = parseInt(overIdStr.replace('group-', ''));
       } else if (overIdStr.startsWith('link-')) {
         const overLinkId = parseInt(overIdStr.replace('link-', ''));
-        const ownerGroup = dragStartSnapshotRef.current.find(g => g.links?.some(l => l.id === overLinkId));
+        const ownerGroup = rollbackSnapshot.find(g => g.links?.some(l => l.id === overLinkId));
         if (ownerGroup) resolvedOverGroupId = ownerGroup.id;
       } else if (overIdStr.startsWith('group-droppable-')) {
         resolvedOverGroupId = parseInt(overIdStr.replace('group-droppable-', ''));
@@ -837,18 +842,17 @@ export const DashboardGrid: React.FC<DashboardGridProps> = ({ autoOpenLinkChange
 
       if (!resolvedOverGroupId || activeGroupId === resolvedOverGroupId) return;
 
-      const snapshot = dragStartSnapshotRef.current;
-      const oldIndex = snapshot.findIndex(g => g.id === activeGroupId);
-      const newIndex = snapshot.findIndex(g => g.id === resolvedOverGroupId);
+      const oldIndex = rollbackSnapshot.findIndex(g => g.id === activeGroupId);
+      const newIndex = rollbackSnapshot.findIndex(g => g.id === resolvedOverGroupId);
       if (oldIndex === -1 || newIndex === -1 || oldIndex === newIndex) return;
 
-      const newOrder = arrayMove(snapshot, oldIndex, newIndex);
-      syncDashboardGroups(newOrder);
+      const newOrder = arrayMove(rollbackSnapshot, oldIndex, newIndex);
+      const normalized = syncDashboardGroups(newOrder);
       try {
-        await api.put('/reorder/groups', newOrder.map((g, i) => ({ id: g.id, order: i })));
+        await api.put('/reorder/groups', toReorderPayload(normalized));
       } catch (err) {
         console.error('Failed to reorder groups:', err);
-        syncDashboardGroups(dragStartSnapshotRef.current);
+        syncDashboardGroups(rollbackSnapshot);
       }
     }
   };
@@ -1062,6 +1066,7 @@ export const DashboardGrid: React.FC<DashboardGridProps> = ({ autoOpenLinkChange
             isOpen={isGroupModalOpen}
             onClose={() => setIsGroupModalOpen(false)}
             group={selectedGroup}
+            totalGroups={localGroups.length}
           />
         ) : null}
         {isLinkModalOpen ? (

@@ -31,6 +31,7 @@ const INVALID_VERSION_VALUES = new Set(['', 'local', 'not available', 'unknown-l
 const listeners = new Set<() => void>();
 
 let initializationPromise: Promise<AppVersionInfo> | null = null;
+let hasAttemptedApiFetch = false;
 let currentVersionInfo: AppVersionInfo;
 
 const isInvalidValue = (value: string | undefined): boolean => {
@@ -154,11 +155,12 @@ const fetchVersionFromApi = async (): Promise<VersionApiPayload> => {
 currentVersionInfo = readRuntimeVersionInfo();
 
 export const initializeAppVersion = async (): Promise<AppVersionInfo> => {
-  if (hasResolvedProductionFields(currentVersionInfo)) {
+  if (hasResolvedProductionFields(currentVersionInfo) || hasAttemptedApiFetch) {
     return currentVersionInfo;
   }
 
   if (!initializationPromise) {
+    hasAttemptedApiFetch = true;
     initializationPromise = (async () => {
       try {
         const payload = await fetchVersionFromApi();
@@ -169,8 +171,6 @@ export const initializeAppVersion = async (): Promise<AppVersionInfo> => {
         });
       } catch {
         updateVersionInfo({});
-      } finally {
-        initializationPromise = null;
       }
 
       return currentVersionInfo;
@@ -184,7 +184,6 @@ export const useAppVersion = (): AppVersionInfo => {
   return React.useSyncExternalStore(
     (listener) => {
       listeners.add(listener);
-      void initializeAppVersion();
 
       return () => {
         listeners.delete(listener);

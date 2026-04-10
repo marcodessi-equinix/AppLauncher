@@ -23,8 +23,10 @@ router.put('/groups', requireTrustedOrigin, requireAdmin, (req, res) => {
   try {
     const stmt = db.prepare('UPDATE groups SET "order" = ? WHERE id = ?');
     const updateMany = db.transaction((items: { id: number; order: number }[]) => {
-      for (const item of items) {
-        stmt.run(item.order, item.id);
+      // Normalize to contiguous 0-based order regardless of input values
+      const sorted = [...items].sort((a, b) => a.order - b.order);
+      for (let i = 0; i < sorted.length; i++) {
+        stmt.run(i, sorted[i].id);
       }
     });
     updateMany(result.data);
@@ -53,8 +55,10 @@ router.put('/links', requireTrustedOrigin, requireAdmin, (req, res) => {
   try {
     const stmt = db.prepare('UPDATE links SET "order" = ? WHERE id = ?');
     const updateMany = db.transaction((items: { id: number; order: number }[]) => {
-      for (const item of items) {
-        stmt.run(item.order, item.id);
+      // Normalize to contiguous 0-based order regardless of input values
+      const sorted = [...items].sort((a, b) => a.order - b.order);
+      for (let i = 0; i < sorted.length; i++) {
+        stmt.run(i, sorted[i].id);
       }
     });
     updateMany(result.data);

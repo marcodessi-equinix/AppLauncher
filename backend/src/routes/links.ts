@@ -49,17 +49,21 @@ router.post('/', requireTrustedOrigin, requireAdmin, (req, res) => {
       return res.status(400).json({ error: 'Group does not exist' });
     }
 
+    // Auto-assign order = MAX(order within group) + 1 so new links always appear at the end of their group
+    const maxRow = db.prepare('SELECT COALESCE(MAX("order"), -1) AS maxOrder FROM links WHERE group_id = ?').get(group_id) as { maxOrder: number };
+    const nextOrder = maxRow.maxOrder + 1;
+
     const stmt = db.prepare(
       'INSERT INTO links (group_id, title, url, description, icon, "order") VALUES (?, ?, ?, ?, ?, ?)'
     );
-    const info = stmt.run(group_id, title, url, description || '', normalizedIcon, order);
+    const info = stmt.run(group_id, title, url, description || '', normalizedIcon, nextOrder);
 
     db.prepare('INSERT INTO audit_logs (action, details) VALUES (?, ?)').run(
       'CREATE_LINK',
       JSON.stringify({ id: info.lastInsertRowid, title, url })
     );
 
-    res.json({ id: info.lastInsertRowid, group_id, title, url, description, icon: normalizedIcon, order });
+    res.json({ id: info.lastInsertRowid, group_id, title, url, description, icon: normalizedIcon, order: nextOrder });
   } catch (err) {
     res.status(500).json({ error: 'Failed to create link' });
   }
