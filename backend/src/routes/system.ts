@@ -3,7 +3,7 @@ import db from '../db/index';
 import { requireAdmin } from '../middleware/auth';
 import sanitizeHtml from 'sanitize-html';
 import { requireTrustedOrigin } from '../middleware/trustedOrigin';
-import { getBuildInfo } from '../config/buildInfo';
+import { getPublicVersionInfo } from '../config/buildInfo';
 
 const router = express.Router();
 
@@ -33,7 +33,7 @@ const readStoredJsonArray = (rawValue: string | undefined) => {
 };
 
 router.get('/version', (req, res) => {
-  res.json(getBuildInfo());
+  res.json(getPublicVersionInfo());
 });
 
 // Get System Info (Public or Protected depending on use case, let's make it public for dashboard view)

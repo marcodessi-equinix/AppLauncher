@@ -12,4 +12,5 @@ test('createApp registers the health route', () => {
     }));
 
   assert.ok(routes.some((route) => route.path === '/api/health' && route.methods.includes('get')));
+  assert.ok(routes.some((route) => route.path === '/api/version' && route.methods.includes('get')));
 });

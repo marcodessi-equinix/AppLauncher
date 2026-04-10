@@ -11,6 +11,14 @@ export interface BuildInfo {
   buildNumber: string;
 }
 
+export interface PublicVersionInfo {
+  version: string;
+  buildDate: string;
+  gitSha: string;
+}
+
+const UNKNOWN_VALUE = 'unknown';
+
 const repoRoot = path.resolve(runtimeConfig.backendRoot, '..');
 const rootPackageJsonPath = path.join(repoRoot, 'package.json');
 const backendPackageJsonPath = path.join(runtimeConfig.backendRoot, 'package.json');
@@ -33,10 +41,15 @@ const readPackageVersion = (filePath: string): string | null => {
 const normalizeReleaseVersion = (value: string): string => {
   const trimmed = value.trim();
   if (!trimmed) {
-    return 'v0.1.0';
+    return UNKNOWN_VALUE;
   }
 
   return trimmed.startsWith('v') ? trimmed : `v${trimmed}`;
+};
+
+const normalizeValue = (value: string | undefined): string => {
+  const trimmed = value?.trim() || '';
+  return trimmed || UNKNOWN_VALUE;
 };
 
 const runGit = (args: string[]): string => {
@@ -50,10 +63,16 @@ const runGit = (args: string[]): string => {
   }
 };
 
+const isProductionRuntime = runtimeConfig.nodeEnv === 'production';
+
 const resolveReleaseVersion = (): string => {
-  const envVersion = process.env.APP_VERSION || process.env.VITE_APP_VERSION;
+  const envVersion = process.env.BUILD_VERSION;
   if (envVersion?.trim()) {
     return normalizeReleaseVersion(envVersion);
+  }
+
+  if (isProductionRuntime) {
+    return UNKNOWN_VALUE;
   }
 
   const rootVersion = readPackageVersion(rootPackageJsonPath);
@@ -70,18 +89,21 @@ const resolveReleaseVersion = (): string => {
 };
 
 const resolveGitSha = (): string => {
-  const envSha = process.env.APP_GIT_SHA || process.env.GIT_SHA || process.env.VITE_GIT_SHA;
+  const envSha = process.env.GIT_SHA;
   if (envSha?.trim()) {
     return envSha.trim().slice(0, 12);
   }
 
+  if (isProductionRuntime) {
+    return UNKNOWN_VALUE;
+  }
+
   const gitSha = runGit(['rev-parse', '--short=7', 'HEAD']);
-  return gitSha || 'local';
+  return gitSha || UNKNOWN_VALUE;
 };
 
 const resolveBuildNumber = (): string => {
-  const explicitBuildNumber = process.env.APP_BUILD_NUMBER
-    || process.env.BUILD_NUMBER
+  const explicitBuildNumber = process.env.BUILD_NUMBER
     || process.env.GITHUB_RUN_NUMBER
     || process.env.CI_PIPELINE_IID
     || process.env.CI_PIPELINE_ID;
@@ -90,17 +112,53 @@ const resolveBuildNumber = (): string => {
     return explicitBuildNumber.trim();
   }
 
-  return runGit(['rev-list', '--count', 'HEAD']);
+  if (isProductionRuntime) {
+    return UNKNOWN_VALUE;
+  }
+
+  return runGit(['rev-list', '--count', 'HEAD']) || UNKNOWN_VALUE;
+};
+
+const resolveBuildDate = (): string => {
+  if (process.env.BUILD_DATE?.trim()) {
+    return process.env.BUILD_DATE.trim();
+  }
+
+  if (isProductionRuntime) {
+    return UNKNOWN_VALUE;
+  }
+
+  return new Date().toISOString().slice(0, 10);
+};
+
+const resolveBuildTime = (): string => {
+  if (process.env.BUILD_TIME?.trim()) {
+    return process.env.BUILD_TIME.trim();
+  }
+
+  if (isProductionRuntime) {
+    return UNKNOWN_VALUE;
+  }
+
+  return new Date().toISOString().slice(11, 19);
 };
 
 export const getBuildInfo = (): BuildInfo => {
-  const now = new Date();
-
   return {
     releaseVersion: resolveReleaseVersion(),
     gitSha: resolveGitSha(),
-    buildDate: (process.env.APP_BUILD_DATE || process.env.BUILD_DATE || now.toISOString().slice(0, 10)).trim(),
-    buildTime: (process.env.APP_BUILD_TIME || process.env.BUILD_TIME || now.toISOString().slice(11, 19)).trim(),
+    buildDate: resolveBuildDate(),
+    buildTime: resolveBuildTime(),
     buildNumber: resolveBuildNumber(),
+  };
+};
+
+export const getPublicVersionInfo = (): PublicVersionInfo => {
+  const buildInfo = getBuildInfo();
+
+  return {
+    version: normalizeReleaseVersion(buildInfo.releaseVersion),
+    buildDate: normalizeValue(buildInfo.buildDate),
+    gitSha: normalizeValue(buildInfo.gitSha),
   };
 };

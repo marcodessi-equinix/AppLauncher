@@ -3,6 +3,14 @@ FROM docker.io/library/node:22-alpine AS builder
 
 WORKDIR /app
 
+ARG BUILD_VERSION
+ARG BUILD_DATE
+ARG GIT_SHA
+
+ENV BUILD_VERSION=$BUILD_VERSION
+ENV BUILD_DATE=$BUILD_DATE
+ENV GIT_SHA=$GIT_SHA
+
 RUN apk add --no-cache python3 make g++
 
 COPY backend/package*.json ./
@@ -16,6 +24,14 @@ RUN npm run build
 FROM docker.io/library/node:22-alpine
 
 WORKDIR /app
+
+ARG BUILD_VERSION
+ARG BUILD_DATE
+ARG GIT_SHA
+
+ENV BUILD_VERSION=$BUILD_VERSION
+ENV BUILD_DATE=$BUILD_DATE
+ENV GIT_SHA=$GIT_SHA
 
 COPY backend/package*.json ./
 RUN apk add --no-cache python3 make g++ su-exec && \

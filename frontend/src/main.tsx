@@ -1,6 +1,7 @@
 import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
 import './index.css'
+import { initializeAppVersion } from './lib/version'
 
 const rootEl = document.getElementById('root')
 
@@ -10,7 +11,10 @@ if (!rootEl) {
 
 const bootstrap = async () => {
   try {
-    const { default: App } = await import('./App')
+    const [{ default: App }] = await Promise.all([
+      import('./App'),
+      initializeAppVersion(),
+    ])
 
     createRoot(rootEl).render(
       <StrictMode>

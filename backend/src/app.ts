@@ -17,7 +17,7 @@ import favoriteRoutes from './routes/favorites';
 import clientRoutes from './routes/clients';
 import { getAllowedOrigins, getConfiguredOrigins, normalizeOrigin } from './lib/originPolicy';
 import { runtimeConfig, uploadsRootDir } from './config/runtime';
-import { getBuildInfo } from './config/buildInfo';
+import { getPublicVersionInfo } from './config/buildInfo';
 
 function isWeakSecret(secret: string): boolean {
   const blocked = new Set([
@@ -99,11 +99,15 @@ export function createApp(): express.Express {
   app.use('/api/favorites', favoriteRoutes);
   app.use('/api/clients', clientRoutes);
 
+  app.get('/api/version', (req, res) => {
+    res.json(getPublicVersionInfo());
+  });
+
   app.get('/api/health', (req, res) => {
     res.json({
       status: 'ok',
       timestamp: new Date().toISOString(),
-      version: getBuildInfo().releaseVersion,
+      version: getPublicVersionInfo().version,
     });
   });
 

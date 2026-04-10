@@ -5,6 +5,10 @@ services:
     build:
       context: .
       dockerfile: Dockerfile.backend
+      args:
+        BUILD_VERSION: ${BUILD_VERSION:?BUILD_VERSION is required}
+        BUILD_DATE: ${BUILD_DATE:?BUILD_DATE is required}
+        GIT_SHA: ${GIT_SHA:?GIT_SHA is required}
     restart: unless-stopped
     environment:
       NODE_ENV: production
@@ -15,6 +19,9 @@ services:
       FRONTEND_URL: ${FRONTEND_URL:-}
       COOKIE_SECURE: ${COOKIE_SECURE:-auto}
       ALLOW_INSECURE_DEFAULTS: "false"
+      BUILD_VERSION: ${BUILD_VERSION:?BUILD_VERSION is required}
+      BUILD_DATE: ${BUILD_DATE:?BUILD_DATE is required}
+      GIT_SHA: ${GIT_SHA:?GIT_SHA is required}
     volumes:
       - applauncher-data:/app/data
       - applauncher-uploads:/app/uploads
@@ -34,15 +41,18 @@ services:
       context: .
       dockerfile: Dockerfile.frontend
       args:
-        APP_VERSION: ${APP_VERSION:-}
-        APP_GIT_SHA: ${APP_GIT_SHA:-}
-        APP_BUILD_DATE: ${APP_BUILD_DATE:-}
-        APP_BUILD_TIME: ${APP_BUILD_TIME:-}
-        APP_BUILD_NUMBER: ${APP_BUILD_NUMBER:-}
+        BUILD_VERSION: ${BUILD_VERSION:?BUILD_VERSION is required}
+        BUILD_DATE: ${BUILD_DATE:?BUILD_DATE is required}
+        GIT_SHA: ${GIT_SHA:?GIT_SHA is required}
     restart: unless-stopped
     depends_on:
       backend:
         condition: service_healthy
+    environment:
+      API_URL: /api
+      BUILD_VERSION: ${BUILD_VERSION:?BUILD_VERSION is required}
+      BUILD_DATE: ${BUILD_DATE:?BUILD_DATE is required}
+      GIT_SHA: ${GIT_SHA:?GIT_SHA is required}
     expose:
       - "80"
     ports:

@@ -141,17 +141,18 @@ If you change `PROXY_FRONTEND_ALIAS`, use that value in NPM instead.
 | `PROXY_FRONTEND_ALIAS` | Internal DNS alias used by the frontend on the proxy network. | `applauncher-frontend` |
 | `DATABASE_PATH` | Optional SQLite path override inside the backend container. | `/app/data/applauncher.db` |
 | `UPLOAD_PATH` | Optional upload path override inside the backend container. | `/app/uploads/icons` |
-| `APP_VERSION` | Optional build/release version override. | root `package.json` version |
-| `APP_GIT_SHA` | Optional Git SHA override. | auto when available |
-| `APP_BUILD_DATE` | Optional build date override. | auto when available |
-| `APP_BUILD_TIME` | Optional build time override. | auto when available |
-| `APP_BUILD_NUMBER` | Optional CI build number override. | auto when available |
+| `BUILD_VERSION` | Required deployment version shown in UI and API. | none |
+| `BUILD_DATE` | Required deployment build date shown in UI and API. | none |
+| `GIT_SHA` | Required deployment Git SHA shown in UI and API. | none |
+| `BUILD_TIME` | Optional build time shown in the version dialog. | auto in local development |
+| `BUILD_NUMBER` | Optional CI build number shown in the version dialog. | auto in local development |
 
 Notes:
 
 - `COOKIE_SECURE=auto` honors `X-Forwarded-Proto` when present and otherwise follows the incoming request.
 - In proxy mode, `FRONTEND_URL` should be the exact external HTTPS URL served to users.
 - `docker-compose.proxy.yml` intentionally has no `ports:` section for the frontend.
+- The frontend reads `/runtime-config.js` first and falls back to `/api/version`, so version metadata stays correct across direct and proxy deployments.
 
 ## Architecture
 

@@ -1,11 +1,10 @@
 /// <reference types="vite/client" />
 
-declare module 'virtual:build-meta' {
-  export const buildMeta: {
-    releaseVersion: string;
-    gitSha: string;
-    buildDate: string;
-    buildTime: string;
-    buildNumber: string;
+interface Window {
+  RUNTIME_CONFIG?: {
+    API_URL?: string;
+    BUILD_VERSION?: string;
+    BUILD_DATE?: string;
+    GIT_SHA?: string;
   };
 }
