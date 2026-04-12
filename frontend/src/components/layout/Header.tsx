@@ -1,5 +1,5 @@
 import React, { Suspense } from 'react';
-import { Search, Lock, Unlock, Moon, Sun, LogOut, Upload, Info, Download, Languages } from 'lucide-react';
+import { Search, Lock, Unlock, Moon, Sun, LogOut, Upload, Info, Download, Languages, MessageSquarePlus } from 'lucide-react';
 import { useStore } from '../../store/useStore';
 import { useWeather } from '../../hooks/useWeather';
 import api, { parseBookmarks, ImportPreviewData } from '../../lib/api';
@@ -31,6 +31,11 @@ const InfoModal = React.lazy(async () => {
   return { default: module.InfoModal };
 });
 
+const LinkRequestsDialog = React.lazy(async () => {
+  const module = await import('./LinkRequestsDialog');
+  return { default: module.LinkRequestsDialog };
+});
+
 interface HeaderProps {
   autoOpenInfoEnabled?: boolean;
 }
@@ -49,6 +54,7 @@ export const Header: React.FC<HeaderProps> = ({ autoOpenInfoEnabled = true }) =>
   const [isLoginOpen, setIsLoginOpen] = React.useState(false);
   const [isWeatherOpen, setIsWeatherOpen] = React.useState(false);
   const [isInfoOpen, setIsInfoOpen] = React.useState(false);
+  const [isLinkRequestsOpen, setIsLinkRequestsOpen] = React.useState(false);
   const [isExporting, setIsExporting] = React.useState(false);
   const [hasCheckedAutoInfo, setHasCheckedAutoInfo] = React.useState(false);
   
@@ -208,6 +214,15 @@ export const Header: React.FC<HeaderProps> = ({ autoOpenInfoEnabled = true }) =>
                   {t('header.infoButton')}
                 </button>
 
+                <button
+                  type="button"
+                  onClick={() => setIsLinkRequestsOpen(true)}
+                  className="inline-flex h-10 items-center gap-2 rounded-2xl border border-[hsl(var(--glass-border)/0.08)] bg-[hsl(var(--glass-highlight)/0.03)] px-4 text-sm font-semibold text-foreground/88 transition-colors hover:bg-[hsl(var(--glass-highlight)/0.06)]"
+                >
+                  <MessageSquarePlus className="h-4 w-4 text-primary" />
+                  {t('header.linkRequests')}
+                </button>
+
                 <div className="telemetry-shell hidden xl:flex items-center gap-2 rounded-2xl border border-[hsl(var(--glass-border)/0.08)] bg-[hsl(var(--glass-highlight)/0.03)] px-3 py-2">
                   <button 
                     onClick={() => setIsWeatherOpen(true)}
@@ -340,6 +355,7 @@ export const Header: React.FC<HeaderProps> = ({ autoOpenInfoEnabled = true }) =>
           <ImportPreviewModal isOpen={isImportModalOpen} onClose={() => setIsImportModalOpen(false)} data={importData} />
         ) : null}
         {isInfoOpen ? <InfoModal isOpen={isInfoOpen} onClose={() => setIsInfoOpen(false)} /> : null}
+        {isLinkRequestsOpen ? <LinkRequestsDialog isOpen={isLinkRequestsOpen} onClose={() => setIsLinkRequestsOpen(false)} /> : null}
       </Suspense>
     </>
   );

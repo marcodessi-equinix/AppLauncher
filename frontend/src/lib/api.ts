@@ -1,4 +1,5 @@
 import axios from 'axios';
+import type { LinkRequest, LinkRequestStatus } from '../types/linkRequest';
 
 const API_BASE = '/api';
 
@@ -144,6 +145,17 @@ export interface ImportPreviewData {
   totalLinks: number;
 }
 
+export interface CreateLinkRequestPayload {
+  clientId: string;
+  message: string;
+  requesterLabel?: string;
+}
+
+export interface UpdateLinkRequestPayload {
+  status?: LinkRequestStatus;
+  adminNote?: string;
+}
+
 export const executeImport = async (data: ImportPreviewData, keepExisting: boolean = false) => {
     const response = await fetch(`${API_BASE}/admin/execute-import`, {
         method: 'POST',
@@ -156,5 +168,20 @@ export const executeImport = async (data: ImportPreviewData, keepExisting: boole
 
     return parseJsonResponse<Record<string, unknown>>(response, 'Import');
 }
+
+export const createLinkRequest = async (payload: CreateLinkRequestPayload): Promise<LinkRequest> => {
+  const response = await api.post('/link-requests', payload);
+  return response.data.request as LinkRequest;
+};
+
+export const fetchLinkRequests = async (): Promise<LinkRequest[]> => {
+  const response = await api.get('/link-requests/admin');
+  return safeArray<LinkRequest>(response.data?.requests);
+};
+
+export const updateLinkRequest = async (id: number, payload: UpdateLinkRequestPayload): Promise<LinkRequest | null> => {
+  const response = await api.patch(`/link-requests/admin/${id}`, payload);
+  return (response.data?.request as LinkRequest | null | undefined) ?? null;
+};
 
 export default api;

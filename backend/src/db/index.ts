@@ -110,6 +110,8 @@ export async function runMigrations() {
     // We import them statically for now as dynamic fs-based imports in TS can be tricky with bundling
     const migrations = [
         { version: 1, name: '001-init', up: (await import('../migrations/001-init')).up },
+        { version: 2, name: '002-link-requests', up: (await import('../migrations/002-link-requests')).up },
+        { version: 3, name: '003-link-request-status-cleanup', up: (await import('../migrations/003-link-request-status-cleanup')).up },
     ];
 
     // 4. Run pending migrations

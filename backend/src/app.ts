@@ -15,6 +15,7 @@ import reorderRoutes from './routes/reorder';
 import adminRoutes from './routes/admin';
 import favoriteRoutes from './routes/favorites';
 import clientRoutes from './routes/clients';
+import linkRequestRoutes from './routes/linkRequests';
 import { getAllowedOrigins, getConfiguredOrigins, normalizeOrigin } from './lib/originPolicy';
 import { runtimeConfig, uploadsRootDir } from './config/runtime';
 import { getPublicVersionInfo } from './config/buildInfo';
@@ -98,6 +99,7 @@ export function createApp(): express.Express {
   app.use('/api/admin', adminRoutes);
   app.use('/api/favorites', favoriteRoutes);
   app.use('/api/clients', clientRoutes);
+  app.use('/api/link-requests', linkRequestRoutes);
 
   app.get('/api/version', (req, res) => {
     res.json(getPublicVersionInfo());

@@ -145,3 +145,68 @@ test('remote icon URLs are rejected for links', async () => {
   const payload = await linkResponse.json();
   assert.ok(payload.error);
 });
+
+test('link requests can be submitted by clients and completed by admins', async () => {
+  const registerResponse = await fetch(`${baseUrl}/api/clients/register`, {
+    method: 'POST',
+    headers: {
+      'content-type': 'application/json',
+      origin: baseUrl,
+    },
+    body: JSON.stringify({ fingerprint: 'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa' }),
+  });
+
+  assert.equal(registerResponse.status, 200);
+  const registeredClient = await registerResponse.json();
+  assert.ok(registeredClient.id);
+
+  const submitResponse = await fetch(`${baseUrl}/api/link-requests`, {
+    method: 'POST',
+    headers: {
+      'content-type': 'application/json',
+      origin: baseUrl,
+    },
+    body: JSON.stringify({
+      clientId: registeredClient.id,
+      message: 'Bitte noch https://intranet.example.local aufnehmen',
+      requesterLabel: 'IT Service Desk',
+    }),
+  });
+
+  assert.equal(submitResponse.status, 201);
+  const submitted = await submitResponse.json();
+  assert.equal(submitted.request.status, 'open');
+  assert.equal(submitted.request.requesterLabel, 'IT Service Desk');
+  assert.match(submitted.request.createdAt, /T\d{2}:\d{2}:\d{2}Z$/);
+
+  const { cookie } = await loginAsAdmin();
+  const listResponse = await fetch(`${baseUrl}/api/link-requests/admin`, {
+    headers: {
+      cookie,
+      origin: baseUrl,
+    },
+  });
+
+  assert.equal(listResponse.status, 200);
+  const listed = await listResponse.json();
+  assert.ok(Array.isArray(listed.requests));
+  assert.equal(listed.requests.length, 1);
+  assert.equal(listed.requests[0].message, 'Bitte noch https://intranet.example.local aufnehmen');
+
+  const patchResponse = await fetch(`${baseUrl}/api/link-requests/admin/${submitted.request.id}`, {
+    method: 'PATCH',
+    headers: {
+      'content-type': 'application/json',
+      cookie,
+      origin: baseUrl,
+    },
+    body: JSON.stringify({
+      status: 'implemented',
+    }),
+  });
+
+  assert.equal(patchResponse.status, 200);
+  const updated = await patchResponse.json();
+  assert.equal(updated.request.status, 'implemented');
+  assert.match(updated.request.updatedAt, /T\d{2}:\d{2}:\d{2}Z$/);
+});
