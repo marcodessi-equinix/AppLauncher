@@ -2,6 +2,7 @@ name: applauncher
 
 services:
   backend:
+    image: ghcr.io/marcodessi-equinix/applauncher-backend:latest
     build:
       context: .
       dockerfile: Dockerfile.backend
@@ -42,6 +43,7 @@ services:
       start_period: 30s
 
   frontend:
+    image: ghcr.io/marcodessi-equinix/applauncher-frontend:latest
     build:
       context: .
       dockerfile: Dockerfile.frontend
