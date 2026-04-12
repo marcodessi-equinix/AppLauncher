@@ -86,13 +86,24 @@ const getCompactBuildDate = (value: string): string => {
   return isoMatch ? isoMatch[1] : trimmed;
 };
 
+const createDisplayReleaseVersion = (releaseVersion: string, buildNumber: string): string => {
+  if (buildNumber === UNKNOWN_VALUE) {
+    return releaseVersion;
+  }
+
+  const semverMatch = releaseVersion.match(/^v?(\d+)\.(\d+)\.(\d+)$/i);
+  if (!semverMatch) {
+    return releaseVersion;
+  }
+
+  return `v${semverMatch[1]}.${semverMatch[2]}.${buildNumber}`;
+};
+
 const createDisplayVersion = (info: Omit<AppVersionInfo, 'displayVersion'>): string => {
-  const versionWithBuildNumber = info.buildNumber !== UNKNOWN_VALUE
-    ? `${info.releaseVersion}+${info.buildNumber}`
-    : info.releaseVersion;
+  const displayReleaseVersion = createDisplayReleaseVersion(info.releaseVersion, info.buildNumber);
 
   const parts = [
-    versionWithBuildNumber,
+    displayReleaseVersion,
     info.gitSha,
     info.buildDate === UNKNOWN_VALUE ? UNKNOWN_VALUE : getCompactBuildDate(info.buildDate),
   ].filter((value) => value !== UNKNOWN_VALUE);
