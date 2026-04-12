@@ -22,6 +22,7 @@ interface VersionApiPayload {
   version?: string;
   buildDate?: string;
   gitSha?: string;
+  buildNumber?: string;
 }
 
 const UNKNOWN_VALUE = 'unknown';
@@ -86,8 +87,12 @@ const getCompactBuildDate = (value: string): string => {
 };
 
 const createDisplayVersion = (info: Omit<AppVersionInfo, 'displayVersion'>): string => {
+  const versionWithBuildNumber = info.buildNumber !== UNKNOWN_VALUE
+    ? `${info.releaseVersion}+${info.buildNumber}`
+    : info.releaseVersion;
+
   const parts = [
-    info.releaseVersion,
+    versionWithBuildNumber,
     info.gitSha,
     info.buildDate === UNKNOWN_VALUE ? UNKNOWN_VALUE : getCompactBuildDate(info.buildDate),
   ].filter((value) => value !== UNKNOWN_VALUE);
@@ -168,6 +173,7 @@ export const initializeAppVersion = async (): Promise<AppVersionInfo> => {
           releaseVersion: payload.version,
           buildDate: payload.buildDate,
           gitSha: payload.gitSha,
+          buildNumber: payload.buildNumber,
         });
       } catch {
         updateVersionInfo({});

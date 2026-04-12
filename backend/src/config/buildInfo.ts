@@ -15,6 +15,7 @@ export interface PublicVersionInfo {
   version: string;
   buildDate: string;
   gitSha: string;
+  buildNumber: string;
 }
 
 interface EmbeddedBuildMetadata {
@@ -256,5 +257,6 @@ export const getPublicVersionInfo = (): PublicVersionInfo => {
     version: normalizeReleaseVersion(buildInfo.releaseVersion),
     buildDate: normalizeValue(buildInfo.buildDate),
     gitSha: normalizeValue(buildInfo.gitSha),
+    buildNumber: normalizeValue(buildInfo.buildNumber),
   };
 };
