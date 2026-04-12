@@ -1,6 +1,6 @@
 import path from 'path';
 
-const ICON_NAME_PATTERN = /^(?:[a-z0-9]+:)?[a-z0-9][a-z0-9._-]{0,127}$/i;
+const ICON_NAME_PATTERN = /^(?:[a-z0-9][a-z0-9-]*:)?[a-z0-9][a-z0-9._-]{0,127}$/i;
 const UPLOAD_ICON_PREFIX = '/uploads/icons/';
 
 export const allowedImageExtensions = new Set([
